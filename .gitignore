@@ -1,0 +1,7 @@
+/.DS_Store
+/target
+/.dfx
+/.env
+/node_modules
+/pnpm-lock.yaml
+/wasm_files
