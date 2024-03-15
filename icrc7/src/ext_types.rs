@@ -15,6 +15,8 @@ pub static TDS: [u8; 4] = [10, 116, 105, 100];
 #[derive(CandidType, Clone, Deserialize, Debug)]
 pub struct TokenIdentifier(String);
 
+pub type Balance = u128;
+
 impl TokenIdentifier {
     pub fn parse_token_identifier(canister_id: Principal, index: u128) -> Self {
         let mut array = vec![];
@@ -95,3 +97,18 @@ pub struct ExtBalanceArg {
 }
 
 pub type ExtBalanceResult = Result<u128, ExtCommonError>;
+
+#[derive(CandidType, Deserialize, Clone)]
+pub struct AllowanceArg {
+    pub owner: User,
+    pub spender: Principal,
+    pub token: TokenIdentifier,
+}
+
+#[derive(CandidType, Deserialize, Clone)]
+pub struct ApproveArg {
+    pub subaccount: Option<Subaccount>,
+    pub spender: Principal,
+    pub allowance: Balance,
+    pub token: TokenIdentifier,
+}
