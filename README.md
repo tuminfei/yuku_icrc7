@@ -44,7 +44,7 @@ to= record {
     owner = principal "3yyxm-t5fpe-v32em-ac6lr-xyort-wuscb-dvl4x-3wnwi-hqkyj-xortw-oqe";                                     
     subaccount = opt blob "\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00";
   };          
-token_id= 1;
+token_id=1;
 memo= null;
 from_subaccount= null;                  
 token_description= opt "Token Number 1";
@@ -64,17 +64,17 @@ subaccount = opt blob "\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00
 token_id= 1;
 from_subaccount= null;
 memo= null;
-created_at_time= opt 1707100000000000000
+created_at_time= opt 1710480202901000000
 };
 record{
 to=record {
 owner = principal "t4egw-clf4w-qbpli-svryg-7yqq6-jt2yj-7v755-mabir-zmx6i-vp4fr-fqe";
 subaccount = opt blob "\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00";
 };
-token_id= 100;
+token_id= 2;
 from_subaccount= null;
 memo= null;
-created_at_time= opt 1707100000000000000
+created_at_time= opt 1710480202901000000
 }
 })'
 ```

@@ -34,6 +34,11 @@ pub fn icrc7_supply_cap() -> Option<u128> {
 }
 
 #[query]
+pub fn icrc7_minting_authority() -> Option<Account> {
+    STATE.with(|s| s.borrow().icrc7_minting_authority())
+}
+
+#[query]
 pub fn icrc7_max_query_batch_size() -> Option<u128> {
     STATE.with(|s| s.borrow().icrc7_max_query_batch_size())
 }

@@ -164,6 +164,10 @@ impl State {
         self.icrc7_logo.clone()
     }
 
+    pub fn icrc7_minting_authority(&self) -> Option<Account> {
+        self.minting_authority.clone()
+    }
+
     pub fn icrc7_max_query_batch_size(&self) -> Option<u128> {
         self.icrc7_max_query_batch_size
     }
