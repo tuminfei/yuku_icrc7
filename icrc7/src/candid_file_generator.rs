@@ -1,3 +1,4 @@
+use crate::ext_types::*;
 use crate::icrc7_types::*;
 use candid::export_service;
 use ic_cdk_macros::query;

@@ -1,19 +1,23 @@
 use std::{cell::RefCell, collections::HashMap};
 
 use crate::{
+    ext_types::{ExtTransferArg, ExtTransferError, ExtTransferResult},
     icrc7_types::{
         BurnResult, Icrc7TokenMetadata, MintArg, MintError, MintResult, Transaction,
         TransactionType, TransferArg, TransferError, TransferResult,
     },
     memory::{get_log_memory, get_token_map_memory, Memory},
-    utils::{account_transformer, burn_account},
+    utils::{account_transformer, burn_account, user_transformer},
     BurnArg, BurnError,
 };
 use candid::{CandidType, Decode, Encode, Principal};
 use ic_stable_structures::{
     memory_manager::MemoryManager, storable::Bound, DefaultMemoryImpl, StableBTreeMap, Storable,
 };
-use icrc_ledger_types::{icrc::generic_metadata_value::MetadataValue, icrc1::account::Account};
+use icrc_ledger_types::{
+    icrc::generic_metadata_value::MetadataValue,
+    icrc1::account::{Account, DEFAULT_SUBACCOUNT},
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(CandidType, Serialize, Deserialize, Clone)]
@@ -391,6 +395,73 @@ impl State {
             txn_results[index] = Some(Ok(txn_id));
         }
         txn_results
+    }
+
+    pub fn ext_transfer(&mut self, caller: &Principal, arg: ExtTransferArg) -> ExtTransferResult {
+        if *caller == Principal::anonymous() {
+            return Err(ExtTransferError::Rejected);
+        }
+
+        if arg.amount != 1 {
+            return Err(ExtTransferError::Other("Must use amount of 1".to_string()));
+        };
+
+        let current_time = ic_cdk::api::time();
+        let canister_id = ic_cdk::api::id();
+
+        let caller_account = account_transformer(Account {
+            owner: caller.clone(),
+            subaccount: Some(DEFAULT_SUBACCOUNT.clone()),
+        });
+
+        let _from_account = match user_transformer(arg.from) {
+            Some(account) => account,
+            None => {
+                return Err(ExtTransferError::Other(
+                    "From User not support address".to_string(),
+                ))
+            }
+        };
+
+        let to_account = match user_transformer(arg.to) {
+            Some(account) => account,
+            None => {
+                return Err(ExtTransferError::Other(
+                    "To User not support address".to_string(),
+                ))
+            }
+        };
+
+        let token_id = match arg.token.parse_token_index(canister_id) {
+            Ok(token_id) => token_id,
+            Err(_) => return Err(ExtTransferError::InvalidToken(arg.token)),
+        };
+
+        let icrc7_arg = TransferArg {
+            from_subaccount: Some(DEFAULT_SUBACCOUNT.clone()),
+            to: to_account,
+            token_id,
+            memo: arg.memo.clone(),
+            created_at_time: Some(current_time),
+        };
+
+        if let Err(_) = self.mock_transfer(&current_time, &caller_account, &icrc7_arg) {
+            return Err(ExtTransferError::Other("mock_transfer error".to_string()));
+        }
+
+        let mut token = self.tokens.get(&icrc7_arg.token_id).unwrap();
+        token.transfer(icrc7_arg.to.clone());
+        self.tokens.insert(icrc7_arg.token_id, token);
+        self.log_transaction(
+            TransactionType::Transfer {
+                tid: icrc7_arg.token_id,
+                from: caller_account.clone(),
+                to: icrc7_arg.to.clone(),
+            },
+            current_time,
+            arg.memo.clone(),
+        );
+        Ok(arg.amount)
     }
 
     fn mock_mint(&self, caller: &Account, arg: &MintArg) -> Result<(), MintError> {
