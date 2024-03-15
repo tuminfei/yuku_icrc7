@@ -5,6 +5,7 @@ pub mod ext_types;
 pub mod init_method;
 pub mod memory;
 pub mod query_method;
+pub mod ext_query_method;
 pub mod state;
 pub mod update_method;
 pub mod ext_update_method;

@@ -1,7 +1,10 @@
 use std::{cell::RefCell, collections::HashMap};
 
 use crate::{
-    ext_types::{ExtTransferArg, ExtTransferError, ExtTransferResult},
+    ext_types::{
+        ExtBalanceArg, ExtBalanceResult, ExtCommonError, ExtTransferArg, ExtTransferError,
+        ExtTransferResult,
+    },
     icrc7_types::{
         BurnResult, Icrc7TokenMetadata, MintArg, MintError, MintResult, Transaction,
         TransactionType, TransferArg, TransferError, TransferResult,
@@ -710,6 +713,33 @@ impl State {
             .collect();
 
         tx_logs
+    }
+
+    pub fn ext_balance(&self, arg: ExtBalanceArg) -> ExtBalanceResult {
+        let canister_id = ic_cdk::api::id();
+        let token_id = match arg.token.parse_token_index(canister_id) {
+            Ok(token_id) => token_id,
+            Err(_) => return Err(ExtCommonError::InvalidToken(arg.token)),
+        };
+
+        let user = match user_transformer(arg.user) {
+            Some(account) => account,
+            None => {
+                return Err(ExtCommonError::Other(
+                    "User not support address".to_string(),
+                ))
+            }
+        };
+
+        if let Some(ref token) = self.tokens.get(&token_id) {
+            if token.token_owner == user {
+                return Ok(1);
+            } else {
+                return Ok(0);
+            }
+        }
+
+        return Err(ExtCommonError::InvalidToken(arg.token));
     }
 }
 

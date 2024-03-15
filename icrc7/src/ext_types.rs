@@ -3,9 +3,10 @@ use candid::Principal;
 use icrc_ledger_types::icrc1::account::Subaccount;
 use serde::Deserialize;
 
-#[derive(Debug)]
+#[derive(CandidType, Deserialize, Clone, Debug)]
 pub enum ExtCommonError {
-    InvalidToken,
+    InvalidToken(TokenIdentifier),
+    Other(String),
 }
 
 // b"\x0Atid"
@@ -27,7 +28,7 @@ impl TokenIdentifier {
         let (canister, index) = self._parse_token_identifier();
         if &canister[..] != canister_id.as_slice() {
             // canister 不是本 canister 的 id，说明 token 不对
-            return Err(ExtCommonError::InvalidToken);
+            return Err(ExtCommonError::InvalidToken(self.to_owned()));
         }
         Ok(index)
     }
@@ -86,3 +87,11 @@ pub enum ExtTransferError {
 }
 
 pub type ExtTransferResult = Result<u128, ExtTransferError>;
+
+#[derive(CandidType, Deserialize, Clone)]
+pub struct ExtBalanceArg {
+    pub user: User,
+    pub token: TokenIdentifier,
+}
+
+pub type ExtBalanceResult = Result<u128, ExtCommonError>;
