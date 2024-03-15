@@ -1,7 +1,7 @@
 use ic_cdk_macros::query;
 use icrc_ledger_types::icrc1::account::Account;
 
-use crate::{state::STATE, Icrc7TokenMetadata, Standard};
+use crate::{icrc7_types::Transaction, state::STATE, Icrc7TokenMetadata, Standard};
 
 #[query]
 pub fn icrc7_symbol() -> String {
@@ -94,4 +94,9 @@ pub fn icrc7_balance_of(accounts: Vec<Account>) -> Vec<u128> {
 #[query]
 pub fn icrc7_tokens_of(account: Account, prev: Option<u128>, take: Option<u128>) -> Vec<u128> {
     STATE.with(|s| s.borrow().icrc7_tokens_of(account, prev, take))
+}
+
+#[query]
+pub fn icrc7_txn_logs(page_number: u32, page_size: u32) -> Vec<Transaction> {
+    STATE.with(|s| s.borrow().icrc7_txn_logs(page_number, page_size))
 }

@@ -620,6 +620,22 @@ impl State {
             },
         }
     }
+
+    pub fn icrc7_txn_logs(&self, page_number: u32, page_size: u32) -> Vec<Transaction> {
+        let offset = (page_number - 1) * page_size;
+        if offset as u128 > self.txn_count {
+            ic_cdk::trap("Exceeds Max Offset Value")
+        }
+        let tx_logs = self
+            .txn_log
+            .iter()
+            .skip(offset as usize)
+            .take(page_size as usize)
+            .map(|(_, txn)| txn.clone())
+            .collect();
+
+        tx_logs
+    }
 }
 
 thread_local! {

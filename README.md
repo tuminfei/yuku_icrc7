@@ -18,7 +18,7 @@ dfx deploy factory --with-cycles 90000000000000
 ```bash
 dfx deploy icrc7 --argument '(record{                                  
 minting_account= opt record {
-    owner = principal "zpxxt-vkthd-jg62u-t6yfs-fo2nu-mbtcj-loqyi-yjrsn-yycfj-5ah6j-vae";                                     
+    owner = principal "3yyxm-t5fpe-v32em-ac6lr-xyort-wuscb-dvl4x-3wnwi-hqkyj-xortw-oqe";                                     
     subaccount = opt blob "\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00";
   };                  
 icrc7_supply_cap= null;
@@ -41,7 +41,7 @@ icrc7_name= "ICP Flower"
 ```bash
 dfx canister call icrc7 mint '(record{                                  
 to= record {
-    owner = principal "4cu2l-slkj7-mo7ap-onxrm-ppr32-cidse-pln24-3dnaj-wtc7b-tn7dm-dae";                                     
+    owner = principal "3yyxm-t5fpe-v32em-ac6lr-xyort-wuscb-dvl4x-3wnwi-hqkyj-xortw-oqe";                                     
     subaccount = opt blob "\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00";
   };          
 token_id= 1;

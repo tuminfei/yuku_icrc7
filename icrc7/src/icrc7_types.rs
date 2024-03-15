@@ -8,7 +8,7 @@ use icrc_ledger_types::{
 };
 use serde::{Deserialize, Serialize};
 
-#[derive(CandidType, Serialize, Deserialize, Debug)]
+#[derive(CandidType, Serialize, Deserialize, Debug, Clone)]
 pub enum TransactionType {
     Mint {
         tid: u128,
@@ -27,7 +27,7 @@ pub enum TransactionType {
     },
 }
 
-#[derive(CandidType, Serialize, Deserialize, Debug)]
+#[derive(CandidType, Serialize, Deserialize, Debug, Clone)]
 pub struct Transaction {
     pub at: u64,
     pub txn_id: u128,

@@ -7,8 +7,8 @@ pub mod query_method;
 pub mod state;
 pub mod update_method;
 pub mod utils;
+pub mod candid_file_generator;
 
 use icrc7_types::*;
-use icrc_ledger_types::icrc1::account::Account;
 
 export_candid!();
