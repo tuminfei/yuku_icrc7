@@ -78,3 +78,18 @@ created_at_time= opt 1710480202901000000
 }
 })'
 ```
+
+#### Approve NFT
+```bash
+dfx canister call icrc7 icrc7_approve '(vec{record{                                  
+spender= record {
+    owner = principal "t4egw-clf4w-qbpli-svryg-7yqq6-jt2yj-7v755-mabir-zmx6i-vp4fr-fqe";                                     
+    subaccount = opt blob "\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00";
+  };          
+token_id=1;
+memo= null;
+expires_at= null;
+from_subaccount= null;
+}
+})'
+```
