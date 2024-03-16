@@ -20,6 +20,6 @@ pub enum ApprovalError {
     TemporaryUnavailable,
     NonExistingTokenId,
     InvalidSpender,
-    GenericError { error_code: u128, msg: String },
+    GenericError { error_code: u128, message: String },
     GenericBatchError { error_code: u128, message: String },
 }

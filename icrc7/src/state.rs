@@ -3,8 +3,8 @@ use std::{cell::RefCell, collections::HashMap};
 use crate::{
     errors::{ApprovalError, TransferError},
     ext_types::{
-        ExtBalanceArg, ExtBalanceResult, ExtCommonError, ExtTransferArg, ExtTransferError,
-        ExtTransferResult,
+        ExtApproveArg, ExtBalanceArg, ExtBalanceResult, ExtCommonError, ExtTransferArg,
+        ExtTransferError, ExtTransferResult,
     },
     icrc7_types::{
         BurnResult, Icrc7TokenMetadata, MintArg, MintError, MintResult, Transaction,
@@ -421,73 +421,6 @@ impl State {
         txn_results
     }
 
-    pub fn ext_transfer(&mut self, caller: &Principal, arg: ExtTransferArg) -> ExtTransferResult {
-        if *caller == Principal::anonymous() {
-            return Err(ExtTransferError::Rejected);
-        }
-
-        if arg.amount != 1 {
-            return Err(ExtTransferError::Other("Must use amount of 1".to_string()));
-        };
-
-        let current_time = ic_cdk::api::time();
-        let canister_id = ic_cdk::api::id();
-
-        let caller_account = account_transformer(Account {
-            owner: caller.clone(),
-            subaccount: Some(DEFAULT_SUBACCOUNT.clone()),
-        });
-
-        let _from_account = match user_transformer(arg.from) {
-            Some(account) => account,
-            None => {
-                return Err(ExtTransferError::Other(
-                    "From User not support address".to_string(),
-                ))
-            }
-        };
-
-        let to_account = match user_transformer(arg.to) {
-            Some(account) => account,
-            None => {
-                return Err(ExtTransferError::Other(
-                    "To User not support address".to_string(),
-                ))
-            }
-        };
-
-        let token_id = match arg.token.parse_token_index(canister_id) {
-            Ok(token_id) => token_id,
-            Err(_) => return Err(ExtTransferError::InvalidToken(arg.token)),
-        };
-
-        let icrc7_arg = TransferArg {
-            from_subaccount: Some(DEFAULT_SUBACCOUNT.clone()),
-            to: to_account,
-            token_id,
-            memo: arg.memo.clone(),
-            created_at_time: Some(current_time),
-        };
-
-        if let Err(_) = self.mock_transfer(&current_time, &caller_account, &icrc7_arg) {
-            return Err(ExtTransferError::Other("mock_transfer error".to_string()));
-        }
-
-        let mut token = self.tokens.get(&icrc7_arg.token_id).unwrap();
-        token.transfer(icrc7_arg.to.clone());
-        self.tokens.insert(icrc7_arg.token_id, token);
-        self.log_transaction(
-            TransactionType::Transfer {
-                tid: icrc7_arg.token_id,
-                from: caller_account.clone(),
-                to: icrc7_arg.to.clone(),
-            },
-            current_time,
-            arg.memo.clone(),
-        );
-        Ok(arg.amount)
-    }
-
     fn mock_mint(&self, caller: &Account, arg: &MintArg) -> Result<(), MintError> {
         if let Some(cap) = self.icrc7_supply_cap {
             if cap == self.icrc7_total_supply {
@@ -641,6 +574,17 @@ impl State {
     fn mock_approve(&self, caller: &Account, arg: &ApprovalArg) -> Result<(), ApprovalError> {
         if arg.spender == *caller {
             return Err(ApprovalError::InvalidSpender);
+        };
+        if let Some(ref memo) = arg.memo {
+            let max_memo_size = self
+                .icrc7_max_memo_size
+                .unwrap_or(State::DEFAULT_MAX_MEMO_SIZE);
+            if memo.len() as u128 > max_memo_size {
+                return Err(ApprovalError::GenericError {
+                    error_code: 3,
+                    message: "Exceeds Max Memo Size".into(),
+                });
+            }
         };
         match self.tokens.get(&arg.token_id) {
             None => Err(ApprovalError::NonExistingTokenId),
@@ -821,6 +765,130 @@ impl State {
             .collect();
 
         tx_logs
+    }
+
+    pub fn ext_transfer(&mut self, caller: &Principal, arg: ExtTransferArg) -> ExtTransferResult {
+        if *caller == Principal::anonymous() {
+            return Err(ExtTransferError::Rejected);
+        }
+
+        if arg.amount != 1 {
+            return Err(ExtTransferError::Other("Must use amount of 1".to_string()));
+        };
+
+        let current_time = ic_cdk::api::time();
+        let canister_id = ic_cdk::api::id();
+
+        let caller_account = account_transformer(Account {
+            owner: caller.clone(),
+            subaccount: Some(DEFAULT_SUBACCOUNT.clone()),
+        });
+
+        let _from_account = match user_transformer(arg.from) {
+            Some(account) => account,
+            None => {
+                return Err(ExtTransferError::Other(
+                    "From User not support address".to_string(),
+                ))
+            }
+        };
+
+        let to_account = match user_transformer(arg.to) {
+            Some(account) => account,
+            None => {
+                return Err(ExtTransferError::Other(
+                    "To User not support address".to_string(),
+                ))
+            }
+        };
+
+        let token_id = match arg.token.parse_token_index(canister_id) {
+            Ok(token_id) => token_id,
+            Err(_) => return Err(ExtTransferError::InvalidToken(arg.token)),
+        };
+
+        let icrc7_arg = TransferArg {
+            from_subaccount: Some(DEFAULT_SUBACCOUNT.clone()),
+            to: to_account,
+            token_id,
+            memo: arg.memo.clone(),
+            created_at_time: Some(current_time),
+        };
+
+        if let Err(_) = self.mock_transfer(&current_time, &caller_account, &icrc7_arg) {
+            return Err(ExtTransferError::Other("mock_transfer error".to_string()));
+        }
+
+        let mut token = self.tokens.get(&icrc7_arg.token_id).unwrap();
+        token.transfer(icrc7_arg.to.clone());
+        self.tokens.insert(icrc7_arg.token_id, token);
+        self.log_transaction(
+            TransactionType::Transfer {
+                tid: icrc7_arg.token_id,
+                from: caller_account.clone(),
+                to: icrc7_arg.to.clone(),
+            },
+            current_time,
+            arg.memo.clone(),
+        );
+        Ok(arg.amount)
+    }
+
+    pub fn ext_approve(&mut self, caller: &Principal, arg: ExtApproveArg) -> bool {
+        if *caller == Principal::anonymous() {
+            return false;
+        }
+
+        if arg.allowance != 1 {
+            return false;
+        };
+
+        let current_time = ic_cdk::api::time();
+        let canister_id = ic_cdk::api::id();
+
+        let caller_account = account_transformer(Account {
+            owner: caller.clone(),
+            subaccount: Some(DEFAULT_SUBACCOUNT.clone()),
+        });
+
+        let to_account = Account {
+            owner: arg.spender.clone(),
+            subaccount: Some(DEFAULT_SUBACCOUNT.clone()),
+        };
+
+        let token_id = match arg.token.parse_token_index(canister_id) {
+            Ok(token_id) => token_id,
+            Err(_) => return false,
+        };
+
+        let icrc7_arg = ApprovalArg {
+            from_subaccount: None,
+            spender: to_account,
+            token_id,
+            expires_at: None,
+            memo: None,
+        };
+
+        if let Err(_) = self.mock_approve(&caller_account, &icrc7_arg) {
+            return false;
+        }
+
+        let mut token = self.tokens.get(&icrc7_arg.token_id).unwrap();
+        let approve_arg = Approval {
+            account: icrc7_arg.spender,
+            expires_at: None,
+        };
+        token.approve(approve_arg);
+        self.log_transaction(
+            TransactionType::Approval {
+                tid: icrc7_arg.token_id,
+                from: caller_account,
+                to: icrc7_arg.spender,
+            },
+            current_time,
+            None,
+        );
+        true
     }
 
     pub fn ext_balance(&self, arg: ExtBalanceArg) -> ExtBalanceResult {

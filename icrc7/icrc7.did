@@ -8,7 +8,7 @@ type ApprovalArg = record {
   spender : Account;
 };
 type ApprovalError = variant {
-  GenericError : record { msg : text; error_code : nat };
+  GenericError : record { message : text; error_code : nat };
   TemporaryUnavailable;
   InvalidSpender;
   NonExistingTokenId;
@@ -26,6 +26,12 @@ type BurnError = variant {
   NonExistingTokenId;
   Unauthorized;
   GenericBatchError : record { message : text; error_code : nat };
+};
+type ExtApproveArg = record {
+  token : text;
+  subaccount : opt vec nat8;
+  allowance : nat;
+  spender : principal;
 };
 type ExtBalanceArg = record { token : text; user : User };
 type ExtCommonError = variant { InvalidToken : text; Other : text };
@@ -124,6 +130,7 @@ type TransferError = variant {
 type User = variant { Address : AccountIdentifier; Principal : principal };
 service : (InitArg) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
+  ext_approve : (ExtApproveArg) -> (bool);
   ext_balance : (ExtBalanceArg) -> (Result) query;
   ext_transfer : (ExtTransferArg) -> (Result_1);
   icrc7_approve : (vec ApprovalArg) -> (vec opt Result_2);

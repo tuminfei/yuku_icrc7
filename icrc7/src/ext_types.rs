@@ -106,7 +106,7 @@ pub struct AllowanceArg {
 }
 
 #[derive(CandidType, Deserialize, Clone)]
-pub struct ApproveArg {
+pub struct ExtApproveArg {
     pub subaccount: Option<Subaccount>,
     pub spender: Principal,
     pub allowance: Balance,
