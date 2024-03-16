@@ -68,11 +68,11 @@ type MintError = variant {
   GenericBatchError : record { message : text; error_code : nat };
   TokenIdAlreadyExist;
 };
-type Result = variant { Ok : nat; Err : BurnError };
-type Result_1 = variant { Ok : nat; Err : ExtCommonError };
-type Result_2 = variant { Ok : nat; Err : ExtTransferError };
-type Result_3 = variant { Ok : nat; Err : TransferError };
-type Result_4 = variant { Ok : nat; Err : MintError };
+type Result = variant { Ok : nat; Err : ExtCommonError };
+type Result_1 = variant { Ok : nat; Err : ExtTransferError };
+type Result_2 = variant { Ok : nat; Err : BurnError };
+type Result_3 = variant { Ok : nat; Err : MintError };
+type Result_4 = variant { Ok : nat; Err : TransferError };
 type Standard = record { url : text; name : text };
 type Transaction = record {
   at : nat64;
@@ -106,11 +106,11 @@ type TransferError = variant {
 type User = variant { Address : AccountIdentifier; Principal : principal };
 service : (InitArg) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
-  burn : (vec BurnArg) -> (vec opt Result);
-  ext_balance : (ExtBalanceArg) -> (Result_1) query;
-  ext_transfer : (ExtTransferArg) -> (Result_2);
+  ext_balance : (ExtBalanceArg) -> (Result) query;
+  ext_transfer : (ExtTransferArg) -> (Result_1);
   icrc7_atomic_batch_transfers : () -> (opt bool) query;
   icrc7_balance_of : (vec Account) -> (vec nat) query;
+  icrc7_burn : (vec BurnArg) -> (vec opt Result_2);
   icrc7_default_take_value : () -> (opt nat) query;
   icrc7_description : () -> (opt text) query;
   icrc7_logo : () -> (opt text) query;
@@ -118,6 +118,7 @@ service : (InitArg) -> {
   icrc7_max_query_batch_size : () -> (opt nat) query;
   icrc7_max_take_value : () -> (opt nat) query;
   icrc7_max_update_batch_size : () -> (opt nat) query;
+  icrc7_mint : (MintArg) -> (Result_3);
   icrc7_minting_authority : () -> (opt Account) query;
   icrc7_name : () -> (text) query;
   icrc7_owner_of : (vec nat) -> (vec opt Account) query;
@@ -130,7 +131,6 @@ service : (InitArg) -> {
   icrc7_tokens : (opt nat, opt nat) -> (vec nat) query;
   icrc7_tokens_of : (Account, opt nat, opt nat) -> (vec nat) query;
   icrc7_total_supply : () -> (nat) query;
-  icrc7_transfer : (vec TransferArg) -> (vec opt Result_3);
+  icrc7_transfer : (vec TransferArg) -> (vec opt Result_4);
   icrc7_txn_logs : (nat32, nat32) -> (vec Transaction) query;
-  mint : (MintArg) -> (Result_4);
 }

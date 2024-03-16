@@ -6,7 +6,7 @@ use crate::{
 };
 
 #[update]
-pub fn mint(arg: MintArg) -> MintResult {
+pub fn icrc7_mint(arg: MintArg) -> MintResult {
     let caller = ic_cdk::caller();
     if caller == Principal::anonymous() {
         return Err(crate::MintError::GenericBatchError {
@@ -24,7 +24,7 @@ pub fn icrc7_transfer(args: Vec<TransferArg>) -> Vec<Option<TransferResult>> {
 }
 
 #[update]
-pub fn burn(args: Vec<BurnArg>) -> Vec<Option<BurnResult>> {
+pub fn icrc7_burn(args: Vec<BurnArg>) -> Vec<Option<BurnResult>> {
     let caller = ic_cdk::caller();
     STATE.with(|s| s.borrow_mut().burn(&caller, args))
 }
