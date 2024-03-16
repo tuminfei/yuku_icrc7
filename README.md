@@ -1,4 +1,4 @@
-#ICRC7
+# ICRC7 (Compatible with EXT standard)
 
 ```bash
 # starts replica in background
@@ -53,7 +53,7 @@ token_name= null
 })'
 ```
 
-# Transferring tokens
+#### Transferring tokens
 ```bash
 dfx canister call icrc7 icrc7_transfer '(vec{
 record{
