@@ -1,17 +1,18 @@
 use std::{cell::RefCell, collections::HashMap};
 
 use crate::{
+    errors::{ApprovalError, TransferError},
     ext_types::{
         ExtBalanceArg, ExtBalanceResult, ExtCommonError, ExtTransferArg, ExtTransferError,
         ExtTransferResult,
     },
     icrc7_types::{
         BurnResult, Icrc7TokenMetadata, MintArg, MintError, MintResult, Transaction,
-        TransactionType, TransferArg, TransferError, TransferResult,
+        TransactionType, TransferArg, TransferResult,
     },
     memory::{get_log_memory, get_token_map_memory, Memory},
     utils::{account_transformer, burn_account, user_transformer},
-    BurnArg, BurnError,
+    Approval, ApprovalArg, ApproveResult, BurnArg, BurnError,
 };
 use candid::{CandidType, Decode, Encode, Principal};
 use ic_stable_structures::{
@@ -30,6 +31,7 @@ pub struct Icrc7Token {
     pub token_description: Option<String>,
     pub token_logo: Option<String>,
     pub token_owner: Account,
+    pub approvals: Vec<Approval>,
 }
 
 impl Storable for Icrc7Token {
@@ -58,11 +60,30 @@ impl Icrc7Token {
             token_logo,
             token_owner,
             token_description,
+            approvals: vec![],
         }
     }
 
     fn transfer(&mut self, to: Account) {
         self.token_owner = to;
+        self.approvals.clear();
+    }
+
+    fn approve(&mut self, approval: Approval) {
+        self.approvals.push(approval);
+    }
+
+    fn approval_check(&self, current_time: u64, account: &Account) -> bool {
+        for approval in self.approvals.iter() {
+            if approval.account == *account {
+                if approval.expires_at.is_none() {
+                    return true;
+                } else if approval.expires_at >= Some(current_time) {
+                    return true;
+                }
+            }
+        }
+        false
     }
 
     fn token_metadata(&self) -> Icrc7TokenMetadata {
@@ -312,8 +333,8 @@ impl State {
             return Err(TransferError::InvalidRecipient);
         }
         let token = self.tokens.get(&arg.token_id).unwrap();
-        // checking if the caller is authorized to make transaction
-        if token.token_owner != *caller {
+        // checking if the caller is authorized or is approve to make transaction
+        if token.token_owner != *caller && !token.approval_check(current_time.clone(), caller) {
             return Err(TransferError::Unauthorized);
         }
         Ok(())
@@ -608,6 +629,93 @@ impl State {
                     tid: arg.token_id,
                     from: caller,
                     to: burn_address,
+                },
+                ic_cdk::api::time(),
+                arg.memo.clone(),
+            );
+            txn_results.insert(index, Some(Ok(tid)))
+        }
+        txn_results
+    }
+
+    fn mock_approve(&self, caller: &Account, arg: &ApprovalArg) -> Result<(), ApprovalError> {
+        if arg.spender == *caller {
+            return Err(ApprovalError::InvalidSpender);
+        };
+        match self.tokens.get(&arg.token_id) {
+            None => Err(ApprovalError::NonExistingTokenId),
+            Some(ref token) => {
+                if token.token_owner != *caller {
+                    return Err(ApprovalError::Unauthorized {
+                        tokens_ids: vec![arg.token_id],
+                    });
+                }
+                Ok(())
+            }
+        }
+    }
+
+    pub fn approve(
+        &mut self,
+        caller: &Principal,
+        mut args: Vec<ApprovalArg>,
+    ) -> Vec<Option<ApproveResult>> {
+        if args.len() == 0 {
+            return vec![Some(Err(ApprovalError::GenericBatchError {
+                error_code: 1,
+                message: "No Arguments Provided".into(),
+            }))];
+        }
+        let mut txn_results = vec![None; args.len()];
+        if *caller == Principal::anonymous() {
+            txn_results[0] = Some(Err(ApprovalError::GenericBatchError {
+                error_code: 100,
+                message: "Anonymous Identity".into(),
+            }));
+            return txn_results;
+        }
+        for (index, arg) in args.iter_mut().enumerate() {
+            let caller = account_transformer(Account {
+                owner: caller.clone(),
+                subaccount: arg.from_subaccount,
+            });
+            if let Err(e) = self.mock_approve(&caller, arg) {
+                txn_results.insert(index, Some(Err(e)))
+            }
+        }
+        if let Some(true) = self.icrc7_atomic_batch_transfers {
+            if txn_results
+                .iter()
+                .any(|res| res.is_some() && res.as_ref().unwrap().is_err())
+            {
+                return txn_results;
+            }
+        }
+        for (index, arg) in args.iter().enumerate() {
+            let caller = account_transformer(Account {
+                owner: caller.clone(),
+                subaccount: arg.from_subaccount,
+            });
+            if let Some(Err(e)) = txn_results.get(index).unwrap() {
+                match e {
+                    &ApprovalError::GenericBatchError {
+                        error_code: _,
+                        message: _,
+                    } => return txn_results,
+                    _ => continue,
+                }
+            }
+            let mut token = self.tokens.get(&arg.token_id).unwrap();
+            let approve_arg = Approval {
+                account: arg.spender,
+                expires_at: arg.expires_at,
+            };
+            token.approve(approve_arg);
+            let tid = self.log_transaction(
+                TransactionType::Approval {
+                    tid: arg.token_id,
+                    from: caller,
+                    to: arg.spender,
                 },
                 ic_cdk::api::time(),
                 arg.memo.clone(),

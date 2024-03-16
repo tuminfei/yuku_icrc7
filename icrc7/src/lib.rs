@@ -11,6 +11,7 @@ pub mod update_method;
 pub mod ext_update_method;
 pub mod utils;
 pub mod candid_file_generator;
+pub mod errors;
 
 use icrc7_types::*;
 

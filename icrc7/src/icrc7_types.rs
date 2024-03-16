@@ -8,6 +8,8 @@ use icrc_ledger_types::{
 };
 use serde::{Deserialize, Serialize};
 
+use crate::errors::{ApprovalError, TransferError};
+
 #[derive(CandidType, Serialize, Deserialize, Debug, Clone)]
 pub enum TransactionType {
     Mint {
@@ -21,6 +23,11 @@ pub enum TransactionType {
         to: Account,
     },
     Transfer {
+        tid: u128,
+        from: Account,
+        to: Account,
+    },
+    Approval {
         tid: u128,
         from: Account,
         to: Account,
@@ -66,6 +73,11 @@ impl Transaction {
                 from: _,
                 to: _,
             } => "burn".into(),
+            TransactionType::Approval {
+                tid: _,
+                from: _,
+                to: _,
+            } => "approve".into(),
         };
         Self {
             op,
@@ -84,18 +96,6 @@ pub struct TransferArg {
     pub token_id: u128,
     pub memo: Option<Vec<u8>>,
     pub created_at_time: Option<u64>,
-}
-
-#[derive(CandidType, Deserialize, Clone, Debug)]
-pub enum TransferError {
-    NonExistingTokenId,
-    InvalidRecipient,
-    Unauthorized,
-    TooOld,
-    CreatedInFuture { ledger_time: u64 },
-    Duplicate { duplicate_of: u128 },
-    GenericError { error_code: u128, message: String },
-    GenericBatchError { error_code: u128, message: String },
 }
 
 pub type TransferResult = Result<u128, TransferError>;
@@ -166,3 +166,41 @@ pub struct Standard {
     pub name: String,
     pub url: String,
 }
+
+#[derive(CandidType, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct Approval {
+    pub expires_at: Option<u64>,
+    pub account: Account,
+}
+
+impl Storable for Approval {
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        std::borrow::Cow::Owned(Encode!(self).unwrap())
+    }
+
+    const BOUND: Bound = Bound::Unbounded;
+}
+
+impl Approval {
+    pub fn new(account: Account, expires_at: Option<u64>) -> Self {
+        Self {
+            expires_at,
+            account,
+        }
+    }
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct ApprovalArg {
+    pub from_subaccount: Option<Subaccount>,
+    pub spender: Account,
+    pub token_id: u128,
+    pub expires_at: Option<u64>,
+    pub memo: Option<Vec<u8>>,
+}
+
+pub type ApproveResult = Result<u128, ApprovalError>;
