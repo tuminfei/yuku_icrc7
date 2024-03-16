@@ -96,7 +96,7 @@ pub struct ExtBalanceArg {
     pub token: TokenIdentifier,
 }
 
-pub type ExtBalanceResult = Result<u128, ExtCommonError>;
+pub type ExtBalanceResult = Result<Balance, ExtCommonError>;
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct AllowanceArg {
@@ -112,3 +112,12 @@ pub struct ExtApproveArg {
     pub allowance: Balance,
     pub token: TokenIdentifier,
 }
+
+#[derive(CandidType, Deserialize, Clone)]
+pub struct ExtAllowanceArg {
+    pub owner: User,
+    pub spender: Principal,
+    pub token: TokenIdentifier,
+}
+
+pub type ExtAllowanceResult = Result<Balance, ExtCommonError>;

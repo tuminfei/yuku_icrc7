@@ -27,6 +27,11 @@ type BurnError = variant {
   Unauthorized;
   GenericBatchError : record { message : text; error_code : nat };
 };
+type ExtAllowanceArg = record {
+  token : text;
+  owner : User;
+  spender : principal;
+};
 type ExtApproveArg = record {
   token : text;
   subaccount : opt vec nat8;
@@ -130,6 +135,7 @@ type TransferError = variant {
 type User = variant { Address : AccountIdentifier; Principal : principal };
 service : (InitArg) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
+  ext_allowance : (ExtAllowanceArg) -> (Result) query;
   ext_approve : (ExtApproveArg) -> (bool);
   ext_balance : (ExtBalanceArg) -> (Result) query;
   ext_transfer : (ExtTransferArg) -> (Result_1);

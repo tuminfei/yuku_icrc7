@@ -3,8 +3,8 @@ use std::{cell::RefCell, collections::HashMap};
 use crate::{
     errors::{ApprovalError, TransferError},
     ext_types::{
-        ExtApproveArg, ExtBalanceArg, ExtBalanceResult, ExtCommonError, ExtTransferArg,
-        ExtTransferError, ExtTransferResult,
+        ExtAllowanceArg, ExtAllowanceResult, ExtApproveArg, ExtBalanceArg, ExtBalanceResult,
+        ExtCommonError, ExtTransferArg, ExtTransferError, ExtTransferResult,
     },
     icrc7_types::{
         BurnResult, Icrc7TokenMetadata, MintArg, MintError, MintResult, Transaction,
@@ -916,6 +916,41 @@ impl State {
         }
 
         return Err(ExtCommonError::InvalidToken(arg.token));
+    }
+
+    pub fn ext_allowance(&self, arg: ExtAllowanceArg) -> ExtAllowanceResult {
+        let canister_id = ic_cdk::api::id();
+        let current_time = ic_cdk::api::time();
+
+        let token_id = match arg.token.parse_token_index(canister_id) {
+            Ok(token_id) => token_id,
+            Err(_) => return Err(ExtCommonError::InvalidToken(arg.token)),
+        };
+
+        let user = match user_transformer(arg.owner) {
+            Some(account) => account,
+            None => {
+                return Err(ExtCommonError::Other(
+                    "User not support address".to_string(),
+                ))
+            }
+        };
+
+        let to_account = Account {
+            owner: arg.spender.clone(),
+            subaccount: Some(DEFAULT_SUBACCOUNT.clone()),
+        };
+
+        let token = self.tokens.get(&token_id).unwrap();
+        if token.token_owner != user {
+            return Err(ExtCommonError::Other("Invalid owner".to_string()));
+        }
+
+        if token.approval_check(current_time, &to_account) {
+            return Ok(1);
+        } else {
+            return Ok(0);
+        }
     }
 }
 
