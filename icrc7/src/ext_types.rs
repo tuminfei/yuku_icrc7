@@ -57,8 +57,31 @@ impl TokenIdentifier {
 }
 
 #[derive(CandidType, Clone, Copy, Hash, Debug, Deserialize)]
-pub struct AccountIdentifier {
-    pub hash: [u8; 28],
+pub struct AccountIdentifier([u8; 32]);
+
+impl AccountIdentifier {
+    pub fn from_principal(principal: &Principal, subaccount: &Option<Subaccount>) -> Self {
+        let subaccount: [u8; 32] = subaccount.unwrap_or_else(|| [0; 32]);
+
+        assert!(subaccount.len() == 32, "Invalid Subaccount");
+
+        use sha2::Digest;
+        let mut hasher = sha2::Sha224::new();
+        hasher.update(b"\x0Aaccount-id");
+        hasher.update(principal.as_slice());
+        hasher.update(&subaccount[..]);
+        let hash: [u8; 28] = hasher.finalize().into();
+
+        let mut hasher = crc32fast::Hasher::new();
+        hasher.update(&hash);
+        let crc32_bytes = hasher.finalize().to_be_bytes();
+
+        let mut result: [u8; 32] = [0u8; 32];
+        result[0..4].copy_from_slice(&crc32_bytes[..]);
+        result[4..32].copy_from_slice(hash.as_ref());
+
+        AccountIdentifier(result)
+    }
 }
 
 #[derive(CandidType, Clone, Copy, Deserialize)]
@@ -121,3 +144,5 @@ pub struct ExtAllowanceArg {
 }
 
 pub type ExtAllowanceResult = Result<Balance, ExtCommonError>;
+
+pub type ExtBearerResult = Result<AccountIdentifier, ExtCommonError>;

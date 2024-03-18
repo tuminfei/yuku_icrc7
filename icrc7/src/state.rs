@@ -3,8 +3,9 @@ use std::{cell::RefCell, collections::HashMap};
 use crate::{
     errors::{ApprovalError, TransferError},
     ext_types::{
-        ExtAllowanceArg, ExtAllowanceResult, ExtApproveArg, ExtBalanceArg, ExtBalanceResult,
-        ExtCommonError, ExtTransferArg, ExtTransferError, ExtTransferResult,
+        AccountIdentifier, ExtAllowanceArg, ExtAllowanceResult, ExtApproveArg, ExtBalanceArg,
+        ExtBalanceResult, ExtBearerResult, ExtCommonError, ExtTransferArg, ExtTransferError,
+        ExtTransferResult, TokenIdentifier,
     },
     icrc7_types::{
         BurnResult, Icrc7TokenMetadata, MintArg, MintError, MintResult, Transaction,
@@ -950,6 +951,26 @@ impl State {
             return Ok(1);
         } else {
             return Ok(0);
+        }
+    }
+
+    pub fn ext_bearer(&self, token: TokenIdentifier) -> ExtBearerResult {
+        let canister_id = ic_cdk::api::id();
+
+        let token_id = match token.parse_token_index(canister_id) {
+            Ok(token_id) => token_id,
+            Err(_) => return Err(ExtCommonError::InvalidToken(token)),
+        };
+
+        let token = self.tokens.get(&token_id);
+
+        if let Some(token_info) = token {
+            return Ok(AccountIdentifier::from_principal(
+                &token_info.token_owner.owner,
+                &token_info.token_owner.subaccount,
+            ));
+        } else {
+            return Err(ExtCommonError::Other("Invalid token".to_string()));
         }
     }
 }

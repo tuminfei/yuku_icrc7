@@ -1,7 +1,7 @@
 use ic_cdk_macros::query;
 
 use crate::{
-    ext_types::{ExtAllowanceArg, ExtAllowanceResult, ExtBalanceArg, ExtBalanceResult},
+    ext_types::{ExtAllowanceArg, ExtAllowanceResult, ExtBalanceArg, ExtBalanceResult, ExtBearerResult, TokenIdentifier},
     state::STATE,
 };
 
@@ -13,4 +13,9 @@ pub fn ext_balance(arg: ExtBalanceArg) -> ExtBalanceResult {
 #[query]
 pub fn ext_allowance(arg: ExtAllowanceArg) -> ExtAllowanceResult {
     STATE.with(|s| s.borrow().ext_allowance(arg))
+}
+
+#[query]
+pub fn ext_bearer(token: TokenIdentifier) -> ExtBearerResult {
+    STATE.with(|s| s.borrow().ext_bearer(token))
 }

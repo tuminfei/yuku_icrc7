@@ -1,5 +1,4 @@
 type Account = record { owner : principal; subaccount : opt vec nat8 };
-type AccountIdentifier = record { hash : vec nat8 };
 type ApprovalArg = record {
   token_id : nat;
   memo : opt vec nat8;
@@ -50,11 +49,11 @@ type ExtTransferArg = record {
   amount : nat;
 };
 type ExtTransferError = variant {
-  CannotNotify : AccountIdentifier;
+  CannotNotify : vec nat8;
   InsufficientBalance;
   InvalidToken : text;
   Rejected;
-  Unauthorized : AccountIdentifier;
+  Unauthorized : vec nat8;
   Other : text;
 };
 type InitArg = record {
@@ -96,11 +95,12 @@ type MintError = variant {
   TokenIdAlreadyExist;
 };
 type Result = variant { Ok : nat; Err : ExtCommonError };
-type Result_1 = variant { Ok : nat; Err : ExtTransferError };
-type Result_2 = variant { Ok : nat; Err : ApprovalError };
-type Result_3 = variant { Ok : nat; Err : BurnError };
-type Result_4 = variant { Ok : nat; Err : MintError };
-type Result_5 = variant { Ok : nat; Err : TransferError };
+type Result_1 = variant { Ok : vec nat8; Err : ExtCommonError };
+type Result_2 = variant { Ok : nat; Err : ExtTransferError };
+type Result_3 = variant { Ok : nat; Err : ApprovalError };
+type Result_4 = variant { Ok : nat; Err : BurnError };
+type Result_5 = variant { Ok : nat; Err : MintError };
+type Result_6 = variant { Ok : nat; Err : TransferError };
 type Standard = record { url : text; name : text };
 type Transaction = record {
   at : nat64;
@@ -132,17 +132,18 @@ type TransferError = variant {
   GenericBatchError : record { message : text; error_code : nat };
   TooOld;
 };
-type User = variant { Address : AccountIdentifier; Principal : principal };
+type User = variant { Address : vec nat8; Principal : principal };
 service : (InitArg) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
   ext_allowance : (ExtAllowanceArg) -> (Result) query;
   ext_approve : (ExtApproveArg) -> (bool);
   ext_balance : (ExtBalanceArg) -> (Result) query;
-  ext_transfer : (ExtTransferArg) -> (Result_1);
-  icrc7_approve : (vec ApprovalArg) -> (vec opt Result_2);
+  ext_bearer : (text) -> (Result_1) query;
+  ext_transfer : (ExtTransferArg) -> (Result_2);
+  icrc7_approve : (vec ApprovalArg) -> (vec opt Result_3);
   icrc7_atomic_batch_transfers : () -> (opt bool) query;
   icrc7_balance_of : (vec Account) -> (vec nat) query;
-  icrc7_burn : (vec BurnArg) -> (vec opt Result_3);
+  icrc7_burn : (vec BurnArg) -> (vec opt Result_4);
   icrc7_default_take_value : () -> (opt nat) query;
   icrc7_description : () -> (opt text) query;
   icrc7_logo : () -> (opt text) query;
@@ -150,7 +151,7 @@ service : (InitArg) -> {
   icrc7_max_query_batch_size : () -> (opt nat) query;
   icrc7_max_take_value : () -> (opt nat) query;
   icrc7_max_update_batch_size : () -> (opt nat) query;
-  icrc7_mint : (MintArg) -> (Result_4);
+  icrc7_mint : (MintArg) -> (Result_5);
   icrc7_minting_authority : () -> (opt Account) query;
   icrc7_name : () -> (text) query;
   icrc7_owner_of : (vec nat) -> (vec opt Account) query;
@@ -163,6 +164,6 @@ service : (InitArg) -> {
   icrc7_tokens : (opt nat, opt nat) -> (vec nat) query;
   icrc7_tokens_of : (Account, opt nat, opt nat) -> (vec nat) query;
   icrc7_total_supply : () -> (nat) query;
-  icrc7_transfer : (vec TransferArg) -> (vec opt Result_5);
+  icrc7_transfer : (vec TransferArg) -> (vec opt Result_6);
   icrc7_txn_logs : (nat32, nat32) -> (vec Transaction) query;
 }
