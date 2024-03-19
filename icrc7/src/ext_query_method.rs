@@ -4,7 +4,7 @@ use ic_cdk_macros::query;
 use crate::{
     ext_types::{
         ExtAllowanceArg, ExtAllowanceResult, ExtBalanceArg, ExtBalanceResult, ExtBearerResult,
-        TokenIdentifier,
+        ExtMetadataResult, TokenIdentifier,
     },
     state::STATE,
 };
@@ -22,6 +22,11 @@ pub fn ext_allowance(arg: ExtAllowanceArg) -> ExtAllowanceResult {
 #[query(name = "bearer")]
 pub fn ext_bearer(token: TokenIdentifier) -> ExtBearerResult {
     STATE.with(|s| s.borrow().ext_bearer(token))
+}
+
+#[query(name = "metadata")]
+pub fn ext_metadata(token: TokenIdentifier) -> ExtMetadataResult {
+    STATE.with(|s| s.borrow().ext_metadata(token))
 }
 
 #[query(name = "getMinter")]

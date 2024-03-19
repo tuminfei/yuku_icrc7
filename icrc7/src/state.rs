@@ -4,8 +4,8 @@ use crate::{
     errors::{ApprovalError, TransferError},
     ext_types::{
         AccountIdentifier, ExtAllowanceArg, ExtAllowanceResult, ExtApproveArg, ExtBalanceArg,
-        ExtBalanceResult, ExtBearerResult, ExtCommonError, ExtTransferArg, ExtTransferError,
-        ExtTransferResult, TokenIdentifier,
+        ExtBalanceResult, ExtBearerResult, ExtCommonError, ExtMetadata, ExtMetadataResult,
+        ExtMetadataType, ExtTransferArg, ExtTransferError, ExtTransferResult, TokenIdentifier,
     },
     icrc7_types::{
         BurnResult, Icrc7TokenMetadata, MintArg, MintError, MintResult, Transaction,
@@ -969,6 +969,27 @@ impl State {
                 &token_info.token_owner.owner,
                 &token_info.token_owner.subaccount,
             ));
+        } else {
+            return Err(ExtCommonError::Other("Invalid token".to_string()));
+        }
+    }
+
+    pub fn ext_metadata(&self, token: TokenIdentifier) -> ExtMetadataResult {
+        let canister_id = ic_cdk::api::id();
+
+        let token_id = match token.parse_token_index(canister_id) {
+            Ok(token_id) => token_id,
+            Err(_) => return Err(ExtCommonError::InvalidToken(token)),
+        };
+
+        let token = self.tokens.get(&token_id);
+
+        if let Some(token_info) = token {
+            let metadata = token_info
+                .token_description
+                .unwrap_or_else(|| String::from(""));
+
+            return Ok(ExtMetadata::Nonfungible(ExtMetadataType::new(metadata)));
         } else {
             return Err(ExtCommonError::Other("Invalid token".to_string()));
         }

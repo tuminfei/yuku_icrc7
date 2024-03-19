@@ -39,6 +39,8 @@ type ExtApproveArg = record {
 };
 type ExtBalanceArg = record { token : text; user : User };
 type ExtCommonError = variant { InvalidToken : text; Other : text };
+type ExtMetadata = variant { fungible; nonfungible : ExtMetadataType };
+type ExtMetadataType = record { metadata : vec nat8 };
 type ExtTransferArg = record {
   to : User;
   token : text;
@@ -100,7 +102,8 @@ type Result_2 = variant { Ok : nat; Err : ApprovalError };
 type Result_3 = variant { Ok : nat; Err : BurnError };
 type Result_4 = variant { Ok : nat; Err : MintError };
 type Result_5 = variant { Ok : nat; Err : TransferError };
-type Result_6 = variant { Ok : nat; Err : ExtTransferError };
+type Result_6 = variant { Ok : ExtMetadata; Err : ExtCommonError };
+type Result_7 = variant { Ok : nat; Err : ExtTransferError };
 type Standard = record { url : text; name : text };
 type Transaction = record {
   at : nat64;
@@ -166,5 +169,6 @@ service : (InitArg) -> {
   icrc7_total_supply : () -> (nat) query;
   icrc7_transfer : (vec TransferArg) -> (vec opt Result_5);
   icrc7_txn_logs : (nat32, nat32) -> (vec Transaction) query;
-  transfer : (ExtTransferArg) -> (Result_6);
+  metadata : (text) -> (Result_6) query;
+  transfer : (ExtTransferArg) -> (Result_7);
 }

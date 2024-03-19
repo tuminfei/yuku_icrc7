@@ -143,3 +143,26 @@ pub struct ExtAllowanceArg {
 pub type ExtAllowanceResult = Result<Balance, ExtCommonError>;
 
 pub type ExtBearerResult = Result<AccountIdentifier, ExtCommonError>;
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct ExtMetadataType {
+    pub metadata: Vec<u8>,
+}
+
+impl ExtMetadataType {
+    pub fn new(metadata: String) -> Self {
+        Self {
+            metadata: metadata.into_bytes(),
+        }
+    }
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub enum ExtMetadata {
+    #[serde(rename = "fungible")]
+    Fungible,
+    #[serde(rename = "nonfungible")]
+    Nonfungible(ExtMetadataType),
+}
+
+pub type ExtMetadataResult = Result<ExtMetadata, ExtCommonError>;
