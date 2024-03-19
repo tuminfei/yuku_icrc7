@@ -8,7 +8,7 @@ use icrc_ledger_types::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::errors::{ApprovalError, TransferError};
+use crate::errors::{ApprovalError, BurnError, MintError, TransferError};
 
 #[derive(CandidType, Serialize, Deserialize, Debug, Clone)]
 pub enum TransactionType {
@@ -115,15 +115,6 @@ pub struct MintArg {
     pub token_logo: Option<String>,
 }
 
-#[derive(CandidType, Clone)]
-pub enum MintError {
-    SupplyCapReached,
-    Unauthorized,
-    TokenIdAlreadyExist,
-    GenericError { error_code: u128, message: String },
-    GenericBatchError { error_code: u128, message: String },
-}
-
 pub type MintResult = Result<u128, MintError>;
 
 #[derive(CandidType, Deserialize, Clone)]
@@ -131,14 +122,6 @@ pub struct BurnArg {
     pub from_subaccount: Option<Subaccount>,
     pub token_id: u128,
     pub memo: Option<Vec<u8>>,
-}
-
-#[derive(CandidType, Clone)]
-pub enum BurnError {
-    Unauthorized,
-    NonExistingTokenId,
-    GenericError { error_code: u128, message: String },
-    GenericBatchError { error_code: u128, message: String },
 }
 
 pub type BurnResult = Result<u128, BurnError>;

@@ -1,20 +1,21 @@
 use std::{cell::RefCell, collections::HashMap};
 
 use crate::{
-    errors::{ApprovalError, TransferError},
+    errors::{
+        ApprovalError, BurnError, ExtCommonError, ExtTransferError, MintError, TransferError,
+    },
     ext_types::{
         AccountIdentifier, ExtAllowanceArg, ExtAllowanceResult, ExtApproveArg, ExtBalanceArg,
-        ExtBalanceResult, ExtBearerResult, ExtCommonError, ExtMetadata, ExtMetadataResult,
-        ExtMetadataType, ExtTokenIndex, ExtTransferArg, ExtTransferError, ExtTransferResult,
-        TokenIdentifier,
+        ExtBalanceResult, ExtBearerResult, ExtMetadata, ExtMetadataResult, ExtMetadataType,
+        ExtTokenIndex, ExtTransferArg, ExtTransferResult, TokenIdentifier,
     },
     icrc7_types::{
-        BurnResult, Icrc7TokenMetadata, MintArg, MintError, MintResult, Transaction,
-        TransactionType, TransferArg, TransferResult,
+        BurnResult, Icrc7TokenMetadata, MintArg, MintResult, Transaction, TransactionType,
+        TransferArg, TransferResult,
     },
     memory::{get_log_memory, get_token_map_memory, Memory},
     utils::{account_transformer, burn_account, user_transformer},
-    Approval, ApprovalArg, ApproveResult, BurnArg, BurnError,
+    Approval, ApprovalArg, ApproveResult, BurnArg,
 };
 use candid::{CandidType, Decode, Encode, Principal};
 use ic_stable_structures::{

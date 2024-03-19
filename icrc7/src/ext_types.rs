@@ -3,11 +3,7 @@ use candid::Principal;
 use icrc_ledger_types::icrc1::account::Subaccount;
 use serde::Deserialize;
 
-#[derive(CandidType, Deserialize, Clone, Debug)]
-pub enum ExtCommonError {
-    InvalidToken(TokenIdentifier),
-    Other(String),
-}
+use crate::errors::{ExtCommonError, ExtTransferError};
 
 // b"\x0Atid"
 pub static TDS: [u8; 4] = [10, 116, 105, 100];
@@ -98,16 +94,6 @@ pub struct ExtTransferArg {
     pub amount: u128,
     pub notify: bool,
     pub subaccount: Option<Subaccount>,
-}
-
-#[derive(CandidType, Deserialize, Clone, Debug)]
-pub enum ExtTransferError {
-    Unauthorized(AccountIdentifier),
-    InsufficientBalance,
-    Rejected,
-    InvalidToken(TokenIdentifier),
-    CannotNotify(AccountIdentifier),
-    Other(String),
 }
 
 pub type ExtTransferResult = Result<u128, ExtTransferError>;

@@ -1,6 +1,8 @@
 use candid::CandidType;
 use serde::Deserialize;
 
+use crate::ext_types::{AccountIdentifier, TokenIdentifier};
+
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub enum TransferError {
     NonExistingTokenId,
@@ -22,4 +24,37 @@ pub enum ApprovalError {
     InvalidSpender,
     GenericError { error_code: u128, message: String },
     GenericBatchError { error_code: u128, message: String },
+}
+
+#[derive(CandidType, Clone)]
+pub enum BurnError {
+    Unauthorized,
+    NonExistingTokenId,
+    GenericError { error_code: u128, message: String },
+    GenericBatchError { error_code: u128, message: String },
+}
+
+#[derive(CandidType, Clone)]
+pub enum MintError {
+    SupplyCapReached,
+    Unauthorized,
+    TokenIdAlreadyExist,
+    GenericError { error_code: u128, message: String },
+    GenericBatchError { error_code: u128, message: String },
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub enum ExtCommonError {
+    InvalidToken(TokenIdentifier),
+    Other(String),
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub enum ExtTransferError {
+    Unauthorized(AccountIdentifier),
+    InsufficientBalance,
+    Rejected,
+    InvalidToken(TokenIdentifier),
+    CannotNotify(AccountIdentifier),
+    Other(String),
 }

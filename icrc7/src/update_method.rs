@@ -10,7 +10,7 @@ use crate::{
 pub fn icrc7_mint(arg: MintArg) -> MintResult {
     let caller = ic_cdk::caller();
     if caller == Principal::anonymous() {
-        return Err(crate::MintError::GenericBatchError {
+        return Err(crate::errors::MintError::GenericBatchError {
             error_code: 100,
             message: "Anonymous Identity".into(),
         });
