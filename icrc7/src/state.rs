@@ -7,7 +7,7 @@ use crate::{
     ext_types::{
         AccountIdentifier, ExtAllowanceArg, ExtAllowanceResult, ExtApproveArg, ExtBalanceArg,
         ExtBalanceResult, ExtBearerResult, ExtMetadata, ExtMetadataResult, ExtMetadataType,
-        ExtTokenIndex, ExtTransferArg, ExtTransferResult, TokenIdentifier,
+        ExtMintArg, ExtTokenIndex, ExtTransferArg, ExtTransferResult, TokenIdentifier,
     },
     icrc7_types::{
         BurnResult, Icrc7TokenMetadata, MintArg, MintResult, Transaction, TransactionType,
@@ -133,6 +133,7 @@ pub struct State {
     #[serde(skip, default = "get_token_map_memory")]
     pub tokens: StableBTreeMap<u128, Icrc7Token, Memory>,
     pub txn_count: u128,
+    pub next_token_id: u128,
     #[serde(skip, default = "get_log_memory")]
     pub txn_log: StableBTreeMap<u128, Transaction, Memory>,
 }
@@ -157,6 +158,7 @@ impl Default for State {
             permitted_drift: None,
             tokens: get_token_map_memory(),
             txn_count: 0,
+            next_token_id: 0,
             txn_log: get_log_memory(),
         }
     }
@@ -450,6 +452,9 @@ impl State {
                 });
             }
         }
+        if &arg.token_id < &self.next_token_id {
+            return Err(MintError::TokenIdMinimumLimit);
+        }
         if let Some(_) = self.tokens.get(&arg.token_id) {
             return Err(MintError::TokenIdAlreadyExist);
         }
@@ -475,6 +480,7 @@ impl State {
             arg.to.clone(),
         );
         self.tokens.insert(arg.token_id, token);
+        self.next_token_id = arg.token_id + 1;
         let txn_id = self.log_transaction(
             TransactionType::Mint {
                 tid: arg.token_id,
@@ -1007,6 +1013,65 @@ impl State {
             token_list.push((id as u32, account_id));
         });
         token_list
+    }
+
+    pub fn ext_mint(&mut self, caller: &Principal, ext_arg: ExtMintArg) -> ExtTokenIndex {
+        let caller = account_transformer(Account {
+            owner: caller.clone(),
+            subaccount: Some(DEFAULT_SUBACCOUNT.clone()),
+        });
+
+        let to_account = match user_transformer(ext_arg.to) {
+            Some(account) => account,
+            None => return 0,
+        };
+
+        let token_id = self.next_token_id;
+
+        let token_description = ext_arg
+            .metadata
+            .map(|bytes| String::from_utf8_lossy(&bytes).to_string());
+
+        let arg = MintArg {
+            from_subaccount: None,
+            to: to_account,
+            token_id,
+            memo: None,
+            token_name: None,
+            token_description,
+            token_logo: None,
+        };
+
+        match self.mock_mint(&caller, &arg) {
+            Ok(_) => (),
+            Err(_) => {
+                return 0;
+            }
+        }
+
+        let token_name = arg.token_name.unwrap_or_else(|| {
+            let name = format!("{} {}", self.icrc7_symbol, arg.token_id);
+            name
+        });
+        let token = Icrc7Token::new(
+            arg.token_id,
+            token_name.clone(),
+            arg.token_description.clone(),
+            arg.token_logo,
+            arg.to.clone(),
+        );
+        self.tokens.insert(arg.token_id, token);
+        self.next_token_id = arg.token_id + 1;
+        self.log_transaction(
+            TransactionType::Mint {
+                tid: arg.token_id,
+                from: caller,
+                to: arg.to,
+            },
+            ic_cdk::api::time(),
+            arg.memo,
+        );
+        return arg.token_id as u32;
     }
 }
 

@@ -39,6 +39,7 @@ pub enum MintError {
     SupplyCapReached,
     Unauthorized,
     TokenIdAlreadyExist,
+    TokenIdMinimumLimit,
     GenericError { error_code: u128, message: String },
     GenericBatchError { error_code: u128, message: String },
 }

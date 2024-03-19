@@ -154,3 +154,9 @@ pub enum ExtMetadata {
 }
 
 pub type ExtMetadataResult = Result<ExtMetadata, ExtCommonError>;
+
+#[derive(CandidType, Deserialize, Clone)]
+pub struct ExtMintArg {
+    pub to: User,
+    pub metadata: Option<Vec<u8>>,
+}
