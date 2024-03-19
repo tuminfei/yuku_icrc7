@@ -17,6 +17,8 @@ pub struct TokenIdentifier(String);
 
 pub type Balance = u128;
 
+pub type ExtTokenIndex = u32;
+
 impl TokenIdentifier {
     pub fn parse_token_identifier(canister_id: Principal, index: u128) -> Self {
         let mut array = vec![];

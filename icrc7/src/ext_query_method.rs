@@ -3,8 +3,8 @@ use ic_cdk_macros::query;
 
 use crate::{
     ext_types::{
-        ExtAllowanceArg, ExtAllowanceResult, ExtBalanceArg, ExtBalanceResult, ExtBearerResult,
-        ExtMetadataResult, TokenIdentifier,
+        AccountIdentifier, ExtAllowanceArg, ExtAllowanceResult, ExtBalanceArg, ExtBalanceResult,
+        ExtBearerResult, ExtMetadataResult, ExtTokenIndex, TokenIdentifier,
     },
     state::STATE,
 };
@@ -37,4 +37,9 @@ pub fn ext_get_minter() -> Principal {
     } else {
         return Principal::anonymous();
     }
+}
+
+#[query(name = "getRegistry")]
+pub fn ext_get_registry() -> Vec<(ExtTokenIndex, AccountIdentifier)> {
+    STATE.with(|s| s.borrow().ext_get_registry())
 }

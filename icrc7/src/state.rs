@@ -5,7 +5,8 @@ use crate::{
     ext_types::{
         AccountIdentifier, ExtAllowanceArg, ExtAllowanceResult, ExtApproveArg, ExtBalanceArg,
         ExtBalanceResult, ExtBearerResult, ExtCommonError, ExtMetadata, ExtMetadataResult,
-        ExtMetadataType, ExtTransferArg, ExtTransferError, ExtTransferResult, TokenIdentifier,
+        ExtMetadataType, ExtTokenIndex, ExtTransferArg, ExtTransferError, ExtTransferResult,
+        TokenIdentifier,
     },
     icrc7_types::{
         BurnResult, Icrc7TokenMetadata, MintArg, MintError, MintResult, Transaction,
@@ -993,6 +994,18 @@ impl State {
         } else {
             return Err(ExtCommonError::Other("Invalid token".to_string()));
         }
+    }
+
+    pub fn ext_get_registry(&self) -> Vec<(ExtTokenIndex, AccountIdentifier)> {
+        let mut token_list = vec![];
+        self.tokens.iter().for_each(|(id, ref token)| {
+            let account_id = AccountIdentifier::from_principal(
+                &token.token_owner.owner,
+                &token.token_owner.subaccount,
+            );
+            token_list.push((id as u32, account_id));
+        });
+        token_list
     }
 }
 
