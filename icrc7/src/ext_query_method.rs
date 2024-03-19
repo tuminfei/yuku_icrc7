@@ -1,21 +1,35 @@
+use candid::Principal;
 use ic_cdk_macros::query;
 
 use crate::{
-    ext_types::{ExtAllowanceArg, ExtAllowanceResult, ExtBalanceArg, ExtBalanceResult, ExtBearerResult, TokenIdentifier},
+    ext_types::{
+        ExtAllowanceArg, ExtAllowanceResult, ExtBalanceArg, ExtBalanceResult, ExtBearerResult,
+        TokenIdentifier,
+    },
     state::STATE,
 };
 
-#[query]
+#[query(name = "balance")]
 pub fn ext_balance(arg: ExtBalanceArg) -> ExtBalanceResult {
     STATE.with(|s| s.borrow().ext_balance(arg))
 }
 
-#[query]
+#[query(name = "allowance")]
 pub fn ext_allowance(arg: ExtAllowanceArg) -> ExtAllowanceResult {
     STATE.with(|s| s.borrow().ext_allowance(arg))
 }
 
-#[query]
+#[query(name = "bearer")]
 pub fn ext_bearer(token: TokenIdentifier) -> ExtBearerResult {
     STATE.with(|s| s.borrow().ext_bearer(token))
+}
+
+#[query(name = "getMinter")]
+pub fn ext_get_minter() -> Principal {
+    let minting_authority = STATE.with(|s| s.borrow().icrc7_minting_authority());
+    if let Some(minting_authority_info) = minting_authority {
+        return minting_authority_info.owner;
+    } else {
+        return Principal::anonymous();
+    }
 }

@@ -1,6 +1,7 @@
 use crate::ext_types::*;
 use crate::icrc7_types::*;
 use candid::export_service;
+use candid::Principal;
 use ic_cdk_macros::query;
 use icrc_ledger_types::icrc1::account::Account;
 
