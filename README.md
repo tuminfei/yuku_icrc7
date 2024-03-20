@@ -99,7 +99,7 @@ from_subaccount= null;
 ### ext-core
 
 balance: query (request : BalanceRequest) -> async BalanceResponse;
-      
+
 transfer: shared (request : TransferRequest) -> async TransferResponse;
 
 ### nonfungible
@@ -117,5 +117,5 @@ supply: shared query (token : TokenIdentifier) -> async Result<Balance, CommonEr
 ### allowance
 
 allowance: shared query (request : AllowanceRequest) -> async async Result<Balance, CommonError>;
-      
+
 approve: shared (request : ApproveRequest) -> async ();

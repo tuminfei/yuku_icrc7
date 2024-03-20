@@ -147,6 +147,8 @@ service : (InitArg) -> {
   bearer : (text) -> (Result_1) query;
   getMinter : () -> (principal) query;
   getRegistry : () -> (vec record { nat32; vec nat8 }) query;
+  getTokens : () -> (vec record { nat32; ExtMetadata }) query;
+  getTokensByIds : (vec nat32) -> (vec record { nat32; ExtMetadata }) query;
   icrc7_approve : (vec ApprovalArg) -> (vec opt Result_2);
   icrc7_atomic_batch_transfers : () -> (opt bool) query;
   icrc7_balance_of : (vec Account) -> (vec nat) query;

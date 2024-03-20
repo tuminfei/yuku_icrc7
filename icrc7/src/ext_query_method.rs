@@ -3,8 +3,7 @@ use ic_cdk_macros::query;
 
 use crate::{
     ext_types::{
-        AccountIdentifier, ExtAllowanceArg, ExtAllowanceResult, ExtBalanceArg, ExtBalanceResult,
-        ExtBearerResult, ExtMetadataResult, ExtSupplyResult, ExtTokenIndex, TokenIdentifier,
+        AccountIdentifier, ExtAllowanceArg, ExtAllowanceResult, ExtBalanceArg, ExtBalanceResult, ExtBearerResult, ExtMetadata, ExtMetadataResult, ExtSupplyResult, ExtTokenIndex, TokenIdentifier
     },
     state::STATE,
 };
@@ -47,4 +46,14 @@ pub fn ext_get_registry() -> Vec<(ExtTokenIndex, AccountIdentifier)> {
 #[query(name = "supply")]
 pub fn ext_supply(_token: TokenIdentifier) -> ExtSupplyResult {
     STATE.with(|s| s.borrow().ext_supply())
+}
+
+#[query(name = "getTokens")]
+pub fn ext_get_tokens() -> Vec<(ExtTokenIndex, ExtMetadata)> {
+    STATE.with(|s| s.borrow().ext_get_tokens())
+}
+
+#[query(name = "getTokensByIds")]
+pub fn ext_get_tokens_by_ids(token_indexs: Vec<ExtTokenIndex>) -> Vec<(ExtTokenIndex, ExtMetadata)> {
+    STATE.with(|s| s.borrow().ext_get_tokens_by_ids(token_indexs))
 }

@@ -5,7 +5,10 @@ use crate::{
         ApprovalError, BurnError, ExtCommonError, ExtTransferError, MintError, TransferError,
     },
     ext_types::{
-        AccountIdentifier, ExtAllowanceArg, ExtAllowanceResult, ExtApproveArg, ExtBalanceArg, ExtBalanceResult, ExtBearerResult, ExtMetadata, ExtMetadataResult, ExtMetadataType, ExtMintArg, ExtSupplyResult, ExtTokenIndex, ExtTransferArg, ExtTransferResult, TokenIdentifier
+        AccountIdentifier, ExtAllowanceArg, ExtAllowanceResult, ExtApproveArg, ExtBalanceArg,
+        ExtBalanceResult, ExtBearerResult, ExtMetadata, ExtMetadataResult, ExtMetadataType,
+        ExtMintArg, ExtSupplyResult, ExtTokenIndex, ExtTransferArg, ExtTransferResult,
+        TokenIdentifier,
     },
     icrc7_types::{
         BurnResult, Icrc7TokenMetadata, MintArg, MintResult, Transaction, TransactionType,
@@ -1074,6 +1077,44 @@ impl State {
 
     pub fn ext_supply(&self) -> ExtSupplyResult {
         Ok(self.tokens.len() as u128)
+    }
+
+    pub fn ext_get_tokens_by_ids(
+        &self,
+        token_indexs: Vec<ExtTokenIndex>,
+    ) -> Vec<(ExtTokenIndex, ExtMetadata)> {
+        let mut token_list = vec![];
+        if token_indexs.len() > 0 {
+            self.tokens.iter().for_each(|(id, ref token)| {
+                if token_indexs.contains(&(id as u32)) {
+                    let metadata = token
+                        .token_description
+                        .clone()
+                        .unwrap_or_else(|| String::from(""));
+                    token_list.push((
+                        id as u32,
+                        ExtMetadata::Nonfungible(ExtMetadataType::new(metadata)),
+                    ));
+                }
+            });
+        }
+
+        token_list
+    }
+
+    pub fn ext_get_tokens(&self) -> Vec<(ExtTokenIndex, ExtMetadata)> {
+        let mut token_list = vec![];
+        self.tokens.iter().for_each(|(id, ref token)| {
+            let metadata = token
+                .token_description
+                .clone()
+                .unwrap_or_else(|| String::from(""));
+            token_list.push((
+                id as u32,
+                ExtMetadata::Nonfungible(ExtMetadataType::new(metadata)),
+            ));
+        });
+        token_list
     }
 }
 
