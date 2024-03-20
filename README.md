@@ -93,3 +93,29 @@ from_subaccount= null;
 }
 })'
 ```
+
+## Compatible with EXT interface
+
+### ext-core
+
+balance: query (request : BalanceRequest) -> async BalanceResponse;
+      
+transfer: shared (request : TransferRequest) -> async TransferResponse;
+
+### nonfungible
+
+bearer: shared query (token : TokenIdentifier) -> async Result<AccountIdentifier, CommonError>;
+
+mintNFT: shared (request : MintRequest) -> async ();
+
+### common
+
+metadata: shared query (token : TokenIdentifier) -> async Result<Metadata, CommonError>;
+
+supply: shared query (token : TokenIdentifier) -> async Result<Balance, CommonError>;
+
+### allowance
+
+allowance: shared query (request : AllowanceRequest) -> async async Result<Balance, CommonError>;
+      
+approve: shared (request : ApproveRequest) -> async ();

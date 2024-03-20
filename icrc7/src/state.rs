@@ -5,9 +5,7 @@ use crate::{
         ApprovalError, BurnError, ExtCommonError, ExtTransferError, MintError, TransferError,
     },
     ext_types::{
-        AccountIdentifier, ExtAllowanceArg, ExtAllowanceResult, ExtApproveArg, ExtBalanceArg,
-        ExtBalanceResult, ExtBearerResult, ExtMetadata, ExtMetadataResult, ExtMetadataType,
-        ExtMintArg, ExtTokenIndex, ExtTransferArg, ExtTransferResult, TokenIdentifier,
+        AccountIdentifier, ExtAllowanceArg, ExtAllowanceResult, ExtApproveArg, ExtBalanceArg, ExtBalanceResult, ExtBearerResult, ExtMetadata, ExtMetadataResult, ExtMetadataType, ExtMintArg, ExtSupplyResult, ExtTokenIndex, ExtTransferArg, ExtTransferResult, TokenIdentifier
     },
     icrc7_types::{
         BurnResult, Icrc7TokenMetadata, MintArg, MintResult, Transaction, TransactionType,
@@ -1072,6 +1070,10 @@ impl State {
             arg.memo,
         );
         return arg.token_id as u32;
+    }
+
+    pub fn ext_supply(&self) -> ExtSupplyResult {
+        Ok(self.tokens.len() as u128)
     }
 }
 

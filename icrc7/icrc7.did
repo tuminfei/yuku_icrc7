@@ -174,5 +174,6 @@ service : (InitArg) -> {
   icrc7_txn_logs : (nat32, nat32) -> (vec Transaction) query;
   metadata : (text) -> (Result_6) query;
   mintNFT : (ExtMintArg) -> (nat32);
+  supply : (text) -> (Result) query;
   transfer : (ExtTransferArg) -> (Result_7);
 }

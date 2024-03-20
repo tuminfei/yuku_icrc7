@@ -160,3 +160,5 @@ pub struct ExtMintArg {
     pub to: User,
     pub metadata: Option<Vec<u8>>,
 }
+
+pub type ExtSupplyResult = Result<Balance, ExtCommonError>;
