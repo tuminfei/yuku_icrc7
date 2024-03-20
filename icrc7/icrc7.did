@@ -138,6 +138,7 @@ type TransferError = variant {
   TooOld;
 };
 type User = variant { Address : vec nat8; Principal : principal };
+type WalletReceiveResult = record { accepted : nat64 };
 service : (InitArg) -> {
   __get_candid_interface_tmp_hack : () -> (text) query;
   allowance : (ExtAllowanceArg) -> (Result) query;
@@ -176,4 +177,6 @@ service : (InitArg) -> {
   mintNFT : (ExtMintArg) -> (nat32);
   supply : (text) -> (Result) query;
   transfer : (ExtTransferArg) -> (Result_7);
+  wallet_balance : () -> (nat) query;
+  wallet_receive : () -> (WalletReceiveResult);
 }

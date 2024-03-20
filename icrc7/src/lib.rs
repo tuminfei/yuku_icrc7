@@ -9,6 +9,7 @@ pub mod ext_query_method;
 pub mod state;
 pub mod update_method;
 pub mod ext_update_method;
+pub mod cycles;
 pub mod utils;
 pub mod candid_file_generator;
 pub mod errors;
