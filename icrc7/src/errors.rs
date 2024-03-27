@@ -59,3 +59,15 @@ pub enum ExtTransferError {
     CannotNotify(AccountIdentifier),
     Other(String),
 }
+
+
+#[derive(CandidType, Debug, PartialEq, Deserialize)]
+pub enum InsertTransactionError {
+    SyncPending,
+    NotSetArchiveCanister,
+    RemoteError,
+    Unexpected(String),
+    CantWrite,
+    InvalidId,
+}
+
