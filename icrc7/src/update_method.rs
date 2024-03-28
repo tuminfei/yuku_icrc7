@@ -5,8 +5,8 @@ use crate::{
     errors::InsertTransactionError,
     guards::owner_guard,
     state::{call_sync_logs, STATE},
-    ApprovalArg, ApproveResult, BurnArg, BurnResult, MintArg, MintResult, SyncReceipt,
-    Transaction, TransferArg, TransferResult,
+    ApprovalArg, ApproveResult, BurnArg, BurnResult, MintArg, MintResult, SyncReceipt, Transaction,
+    TransferArg, TransferResult,
 };
 
 #[update]
@@ -61,7 +61,7 @@ pub async fn icrc7_archive_logs() -> SyncReceipt {
         return Err(InsertTransactionError::SyncPending);
     }
 
-    let txn_logs: Vec<Transaction> = STATE.with(|s| s.borrow().get_txn_logs(100));
+    let txn_logs: Vec<Transaction> = STATE.with(|s| s.borrow().get_txn_logs(200));
 
     let txn_ids: Vec<u128> = txn_logs.iter().map(|log| log.txn_id).collect();
 

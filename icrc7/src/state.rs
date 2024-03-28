@@ -140,6 +140,7 @@ pub struct State {
     pub txn_log: StableBTreeMap<u128, Transaction, Memory>,
     pub archive_log_canister: Option<Principal>,
     pub sync_pending_txn_ids: Option<Vec<u128>>,
+    pub archive_txn_count: u128,
 }
 
 impl Default for State {
@@ -166,6 +167,7 @@ impl Default for State {
             txn_log: get_log_memory(),
             archive_log_canister: None,
             sync_pending_txn_ids: None,
+            archive_txn_count: 0,
         }
     }
 }
@@ -310,6 +312,10 @@ impl State {
         let txn = Transaction::new(txn_id, txn_type, at, memo);
         self.txn_log.insert(txn_id, txn);
         txn_id
+    }
+
+    fn get_current_txn_count(&self) -> u128 {
+        self.txn_count - self.archive_txn_count
     }
 
     fn mock_transfer(
@@ -781,7 +787,7 @@ impl State {
 
     pub fn icrc7_txn_logs(&self, page_number: u32, page_size: u32) -> Vec<Transaction> {
         let offset = (page_number - 1) * page_size;
-        if offset as u128 > self.txn_count {
+        if offset as u128 > self.get_current_txn_count() {
             ic_cdk::trap("Exceeds Max Offset Value")
         }
         let tx_logs = self
@@ -811,6 +817,7 @@ impl State {
             self.txn_log.remove(txn_id);
         }
         self.sync_pending_txn_ids = None;
+        self.archive_txn_count += txn_ids.len() as u128;
         return true;
     }
 

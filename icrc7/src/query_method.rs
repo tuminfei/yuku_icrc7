@@ -1,3 +1,4 @@
+use candid::Principal;
 use ic_cdk_macros::query;
 use icrc_ledger_types::icrc1::account::Account;
 
@@ -79,6 +80,11 @@ pub fn icrc7_supported_standards() -> Vec<Standard> {
         name: "ICRC-7".into(),
         url: "https://github.com/dfinity/ICRC/ICRCs/ICRC-7".into(),
     }]
+}
+
+#[query]
+pub fn icrc7_archive_log_canister() -> Option<Principal> {
+    STATE.with(|s| s.borrow().get_archive_log_canister())
 }
 
 #[query]
