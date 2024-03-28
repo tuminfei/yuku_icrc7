@@ -159,6 +159,7 @@ service : (InitArg) -> {
   getTokens : () -> (vec record { nat32; ExtMetadata }) query;
   getTokensByIds : (vec nat32) -> (vec record { nat32; ExtMetadata }) query;
   icrc7_approve : (vec ApprovalArg) -> (vec opt Result_2);
+  icrc7_archive_log_canister : () -> (opt principal) query;
   icrc7_archive_logs : () -> (Result_3);
   icrc7_atomic_batch_transfers : () -> (opt bool) query;
   icrc7_balance_of : (vec Account) -> (vec nat) query;
