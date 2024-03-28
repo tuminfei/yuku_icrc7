@@ -1,0 +1,37 @@
+type Account = record { owner : principal; subaccount : opt vec nat8 };
+type InitArgs = record { parent_canister_id : principal };
+type InsertTransactionError = variant {
+  InvalidId;
+  CantWrite;
+  Unexpected : text;
+};
+type Result = variant { Ok : nat32; Err : InsertTransactionError };
+type Result_1 = variant { Ok : nat; Err : InsertTransactionError };
+type TransactionLog = record {
+  at : nat64;
+  op : text;
+  memo : opt vec nat8;
+  txn_type : TransactionType;
+  txn_id : nat;
+};
+type TransactionType = variant {
+  Burn : record { to : Account; tid : nat; from : Account };
+  Mint : record { to : Account; tid : nat; from : Account };
+  Approval : record { to : Account; tid : nat; from : Account };
+  Transfer : record { to : Account; tid : nat; from : Account };
+};
+type WalletReceiveResult = record { accepted : nat64 };
+service : (InitArgs) -> {
+  __get_candid_interface_tmp_hack : () -> (text) query;
+  get_max_txn_id : () -> (nat) query;
+  get_owner : () -> (principal) query;
+  get_txn_count : () -> (nat) query;
+  get_txn_log : (nat) -> (opt TransactionLog) query;
+  insert_many_txn_log : (vec TransactionLog) -> (Result);
+  insert_txn_log : (TransactionLog) -> (Result_1);
+  page_txn_logs : (nat32, nat32) -> (vec TransactionLog) query;
+  update_owner : (principal) -> (bool);
+  update_parent_canister : (principal) -> (bool);
+  wallet_balance : () -> (nat) query;
+  wallet_receive : () -> (WalletReceiveResult);
+}

@@ -2,7 +2,8 @@ use std::{cell::RefCell, collections::HashMap};
 
 use crate::{
     errors::{
-        ApprovalError, BurnError, ExtCommonError, ExtTransferError, MintError, TransferError,
+        ApprovalError, BurnError, ExtCommonError, ExtTransferError, InsertTransactionError,
+        MintError, TransferError,
     },
     ext_types::{
         AccountIdentifier, ExtAllowanceArg, ExtAllowanceResult, ExtApproveArg, ExtBalanceArg,
@@ -16,7 +17,7 @@ use crate::{
     },
     memory::{get_log_memory, get_token_map_memory, Memory},
     utils::{account_transformer, burn_account, user_transformer},
-    Approval, ApprovalArg, ApproveResult, BurnArg,
+    Approval, ApprovalArg, ApproveResult, BurnArg, SyncReceipt,
 };
 use candid::{CandidType, Decode, Encode, Principal};
 use ic_stable_structures::{
@@ -137,6 +138,9 @@ pub struct State {
     pub next_token_id: u128,
     #[serde(skip, default = "get_log_memory")]
     pub txn_log: StableBTreeMap<u128, Transaction, Memory>,
+    pub archive_log_canister: Option<Principal>,
+    pub sync_pending_txn_ids: Option<Vec<u128>>,
+    pub archive_txn_count: u128,
 }
 
 impl Default for State {
@@ -161,6 +165,9 @@ impl Default for State {
             txn_count: 0,
             next_token_id: 0,
             txn_log: get_log_memory(),
+            archive_log_canister: None,
+            sync_pending_txn_ids: None,
+            archive_txn_count: 0,
         }
     }
 }
@@ -236,6 +243,19 @@ impl State {
         res
     }
 
+    pub fn get_archive_log_canister(&self) -> Option<Principal> {
+        self.archive_log_canister
+    }
+
+    pub fn get_sync_pending_txn_ids(&self) -> Option<Vec<u128>> {
+        self.sync_pending_txn_ids.clone()
+    }
+
+    pub fn set_sync_pending_txn_ids(&mut self, txn_ids: Option<Vec<u128>>) -> bool {
+        self.sync_pending_txn_ids = txn_ids;
+        return true;
+    }
+
     fn txn_deduplication_check(
         &self,
         allowed_past_time: &u64,
@@ -292,6 +312,10 @@ impl State {
         let txn = Transaction::new(txn_id, txn_type, at, memo);
         self.txn_log.insert(txn_id, txn);
         txn_id
+    }
+
+    fn get_current_txn_count(&self) -> u128 {
+        self.txn_count - self.archive_txn_count
     }
 
     fn mock_transfer(
@@ -763,7 +787,7 @@ impl State {
 
     pub fn icrc7_txn_logs(&self, page_number: u32, page_size: u32) -> Vec<Transaction> {
         let offset = (page_number - 1) * page_size;
-        if offset as u128 > self.txn_count {
+        if offset as u128 > self.get_current_txn_count() {
             ic_cdk::trap("Exceeds Max Offset Value")
         }
         let tx_logs = self
@@ -775,6 +799,26 @@ impl State {
             .collect();
 
         tx_logs
+    }
+
+    pub fn get_txn_logs(&self, size: usize) -> Vec<Transaction> {
+        let tx_logs: Vec<Transaction> = self
+            .txn_log
+            .iter()
+            .take(size)
+            .map(|(_, txn)| txn.clone())
+            .collect();
+
+        tx_logs
+    }
+
+    pub fn remove_txn_logs(&mut self, txn_ids: &Vec<u128>) -> bool {
+        for txn_id in txn_ids {
+            self.txn_log.remove(txn_id);
+        }
+        self.sync_pending_txn_ids = None;
+        self.archive_txn_count += txn_ids.len() as u128;
+        return true;
     }
 
     pub fn ext_transfer(&mut self, caller: &Principal, arg: ExtTransferArg) -> ExtTransferResult {
@@ -1121,4 +1165,22 @@ impl State {
 thread_local! {
     pub static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
     pub static STATE: RefCell<State> = RefCell::default();
+}
+
+pub async fn call_sync_logs(
+    archive_log_canister: Principal,
+    txn_logs: Vec<Transaction>,
+) -> SyncReceipt {
+    // sync logs
+    let call_result: Result<(SyncReceipt,), _> = ic_cdk::api::call::call(
+        archive_log_canister,
+        "insert_many_txn_log",
+        (txn_logs.clone(),),
+    )
+    .await;
+
+    match call_result {
+        Ok(_) => Ok(txn_logs.len() as u32),
+        Err((_rejection_code, _msg)) => Err(InsertTransactionError::RemoteError),
+    }
 }

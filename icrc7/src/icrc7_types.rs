@@ -8,7 +8,7 @@ use icrc_ledger_types::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::errors::{ApprovalError, BurnError, MintError, TransferError};
+use crate::errors::{ApprovalError, BurnError, InsertTransactionError, MintError, TransferError};
 
 #[derive(CandidType, Serialize, Deserialize, Debug, Clone)]
 pub enum TransactionType {
@@ -187,3 +187,5 @@ pub struct ApprovalArg {
 }
 
 pub type ApproveResult = Result<u128, ApprovalError>;
+
+pub type SyncReceipt = Result<u32, InsertTransactionError>;

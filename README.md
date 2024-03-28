@@ -44,7 +44,7 @@ to= record {
     owner = principal "3yyxm-t5fpe-v32em-ac6lr-xyort-wuscb-dvl4x-3wnwi-hqkyj-xortw-oqe";                                     
     subaccount = opt blob "\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00";
   };          
-token_id=4;
+token_id=1;
 memo= null;
 from_subaccount= null;                  
 token_description= opt "Token Number 1";
@@ -92,6 +92,26 @@ expires_at= null;
 from_subaccount= null;
 }
 })'
+```
+
+#### Deploying Tansaction Log Canister
+
+```bash
+dfx deploy transaction_log --argument '(record{                                  
+parent_canister_id= principal "bkyz2-fmaaa-aaaaa-qaaaq-cai";
+})'
+```
+
+#### Set ICRC7 Archive Tansaction Log Canister
+
+```bash
+dfx canister call icrc7 icrc7_set_archive_log_canister '(principal "be2us-64aaa-aaaaa-qaabq-cai")'
+```
+
+#### Sync ICRC7 Archive Tansaction Log
+
+```bash
+dfx canister call icrc7 icrc7_archive_logs
 ```
 
 ## Compatible with EXT interface

@@ -8,6 +8,13 @@
         "optimize": "cycles",
         "wasm": "gzip"
       },
+      "transaction_log": {
+        "type": "rust",
+        "package": "transaction_log",
+        "candid": "transaction_log/transaction_log.did",
+        "optimize": "cycles",
+        "wasm": "gzip"
+      },
       "factory": {
         "type": "rust",
         "package": "factory",
